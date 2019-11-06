@@ -1,0 +1,84 @@
+---
+title: "Assignment 1"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**1. Fit a straight line to the data point and produce a plot of the data with the line of best fit superimposed.**
+```{r}
+file1 <- "Ass1.txt"
+data1<-read.table(file1, header=TRUE)
+plot(data1$x, data1$y, pch=18, xlab = 'x', ylab = 'y')
+x1<-data1$x
+y<-data1$y
+
+fit<-lm(y~x1)
+abline(fit) 
+```
+
+
+**2. Give the least squares estimates $\hat\beta_{0}$ and $\hat\beta_{1}$ for the intercept $\beta_{0}$ and and slope $\beta_{1}$ in a simple linear regression model. Report also the least-squares equation arising from a least squares fit.**
+
+```{r}
+coef(fit)
+summary(fit)
+```
+  
+From above, we know the intercept $\beta_{0}$ = 0.02676552 and the slope $\beta_{1}$ = 1.72512091 as well as the least square estimates $\hat\beta_{0}$ = 0.02677 and $\hat\beta_{1}$ = 1.72512 
+
+Notice that the least-squares equation: $\hat{y^{*}} = E\hat{(Y|X=x^{*})} = \hat\beta_{0} +  \hat\beta_{1}x^{*} = 0.02677 + 1.72512091 x^{*}$ is arised from a least square method with $\hat\beta_{0}$ and $\hat\beta_{1}$.
+
+&nbsp;
+&nbsp;  
+
+**3. Give an estimate of the variance $\sigma^{2}$.**
+```{r}
+(summary(fit)$sigma)**2
+```
+Thus, $s^2 = \frac{RSS}{n-2} = \frac{\sum{e_{i}^2}}{25} = 4.761522$
+
+&nbsp;
+&nbsp;
+
+**4. At level 5%, test $H_{0}$ : $\beta_{1}$ = 0 versus Ha : $\beta_{1}  \not= 0$. What is the p-value of your test ?**  
+For hypothesis $H_{0} : \beta_{1} = 0$, test statistics is $T_0 = \frac{\hat\beta_1} {se(\hat\beta_{1})} \sim t_{n-2} = \frac{1.72512091}{0.14372} = 12.003$ when $H_{0}$ is True. Use two-sided test, check if p-value is less than the level of significance $\alpha$ = 5%. From the summary function above, p-value = $2 * P(T > T_0) = 2 * P(T > 12.003)$ = 7.145e-12  < 0.05, where $T \sim t_{n-2}$. Therefore, reject $H_{0}$.  
+
+&nbsp;
+&nbsp;
+  
+**5. Use the least-squares equation to estimate the mean E(Y|X = 2.5) . Find a 95% confidence interval for E(Y|X = 2.5). Is 0 a feasible value for E(Y|X = 2.5). Give a reason to support your answer.**  
+E(Y|X = 2.5) = $\beta_{0} + \beta_{1} (x^*) = 0.02676552 + 1.72512091*(2.5) = 4.34$
+```{r}
+predict(lm(fit), newdata=list(x1 = 2.5), interval="confidence", level=.95)
+```
+Confidence Interval = $(\hat\beta_{0} + \hat\beta_{1}x^* \pm t_{n-2}(1-\alpha/2, n-2)*s \sqrt{\frac{1}{n}+\frac{(x^*-\bar{x})^2}{S_{xx}}})$ = (2.974702, 5.704434)  
+0 is not a feasible value because 0 < 2.974702 which is the lower bound of the confidence interval for E(Y|X = 2.5).
+
+&nbsp;
+&nbsp;    
+
+**6. Find a 95% prediction interval for y at x = 2.5**  
+```{r}
+predict(lm(fit), newdata=list(x1 = 2.5), interval="prediction", level=.95)
+```
+Prediction Interval = $(\hat\beta_{0} + \hat\beta_{1}x^* \pm t_{n-2}(1-\alpha/2, n-2)*s \sqrt{1+\frac{1}{n}+\frac{(x^*-\bar{x})^2}{S_{xx}}})$ = (-0.3572184, 9.036354)
+
+## Bonus Questions:
+**1. plot( against the x values) the residuals $e_{i}$, i = 1, . . . , n, from the fit**
+```{r}
+residuals(fit)
+plot(x1, fit$residuals)
+```
+
+**2. Comment on the adequcy of the straight line model, based on the residual plot, that is, comment on weather the assumption of the least squares fitted and how they relate to the residual errors e_{i} are met by the observed data.**
+
+```{r}
+summary(residuals(fit))
+```
+The assumption of least squares method states the error terms are independent random variables with zero mean and constant variance and each $e_{i}$ are uncorrelated. On question 1, we get the plot of residuals as a function of x. We can see that the residuals are negative as well as positive scattered randomly around zero. Also, the vertical width of the scatter does not appear to increase or decrease across x values, so we can assume that the variance in the error terms is constant. By checking with the summary of the plot, we know the residuals average to zero and have constant variance. Thus, we can conclude the linear regression line model is adequate since the assumptions are met. 

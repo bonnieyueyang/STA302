@@ -1,0 +1,213 @@
+---
+title: "Assignment 2"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+file <- "Ass2.txt"
+D <- read.table(file, header = TRUE)
+```
+
+## Question 1
+
+**(a) Compute and report the least-squares estimates of the vector $\beta$ using MPG as reponse variable and engine size, weight and horse power as explanatory variables. Write down the estimated regression equation.**
+
+```{r}
+n<-11
+p<-3
+y <- D$MPG
+x1 <- D$Engine
+x2 <- D$HP
+x3 <-D$Weight
+xvals <- c(x1, x2, x3)
+(X<-matrix(c(rep(1,n),xvals),nrow=n,ncol=p+1))
+BetaHat <- solve(t(X)%*%X)%*%t(X)%*%y
+yhat <- X%*%BetaHat
+print(BetaHat)
+```
+The estimated regression equation is  
+$\hat{Y}$ = 35.180503587 + (-0.002567547) $x_1$ + 0.015388888 $x_2$ + (-0.001843143)$x_3$
+
+&nbsp;  
+
+**(b) Explain in context what the coefficient corresponding to horsepower means.**
+
+Increasing horsepower by 1 pound, the gas mileage increases by 0.015388888 mpg.
+
+&nbsp;  
+
+**(c) Using the response variable(y), and the fitted value $\hat{y}$, compute the biased and unbiased estimates of the error variance $\sigma^2$. **
+```{r}
+ehat <- y - yhat
+RSS <- t(ehat)%*%ehat
+biased <- RSS/n
+unbiased <- RSS/(n-p-1)
+biased
+unbiased
+```
+Thus, the biased estimate of error variance is 0.5180943 and the unbiased estimate of the error variance is 0.8141483. 
+
+&nbsp;  
+
+**(d) Compute the variance-covariance matrix of the estimated regression coefficients. Derive estimates of the variances and the covariance of the estimators of the regression coefficients associated with predictors engine size and horsepower?**
+```{r}
+cov <- solve(t(X)%*%X)
+cov
+cov[1,1]
+cov[2,2]
+cov[3,3]
+cov[4,4]
+cov[2,3]
+```
+
+Var($\hat{\beta_0}$) = 11.89423 \
+Var($\hat{\beta_1}$) = 2.571567e-07 \
+Var($\hat{\beta_2}$) = 1.560537e-04 \
+Var($\hat{\beta_3}$) = 4.190466e-07 \
+
+Cov($\hat{\beta_1}, \hat{\beta_2}$) = -1.977181e-06 
+
+## Question 2
+
+**(a) Conduct the F-test for the overall fit of the regression. Comment on the results.**
+
+We want to test $H_0$: $\beta_1$ = $\beta_2$ = $\beta_3$ = 0 against $H_a$: at least one of $\beta_i \not= 0$, where i = 1, 2, 3
+```{r}
+fit <- lm(y~x1+x2+x3, data = D)
+summary(fit)
+```
+
+The output shows that F = 14.34 (p-value = 0.002253), indicating that we should reject the null hypothesis that the variables Engine, HP and Weight collectively have no effect on MPG.
+The results also show that Engine and Weight are significant, but HP is nonsignificant.
+In addition, the output also shows that $R^2$ = 0.8601 and $R^2_{adjusted}$ = 0.8001.
+
+&nbsp;  
+
+**(b) Test each of the individual regression coefficients. Do the results indicate that any of the explanatory variables should be removed from the model?** 
+
+Here we use individual T-test. \
+1. Test: $H_0: \beta_1 = 0$ against $H_a: \beta_1 \not= 0$
+```{r}
+coef <- summary(fit)$coef
+print(coef)
+beta1hat<-coef[2,1]
+sebeta1hat<-coef[2,2]
+t <-beta1hat/sebeta1hat
+print(t)
+alpha<-0.05
+t0<-qt(1-alpha/2,n-p-1)
+print(t0)
+pval1<-coef[2,4]
+print(pval1)
+```
+So, T-statistic: $|T_1| = |\frac{\hat{\beta_1}}{se(\hat{\beta_1})}|$ = 5.611354 > $t(1-\alpha/2, n-1)$ = 2.364624 \
+We reject $H_0$ and conclude that $\beta_1$ is significantly different from 0. \
+The p-value of the test is equal to 0.0008063205, which leads to the same conclusion. 
+
+2. Test: $H_0: \beta_2 = 0$ against $H_a: \beta_2 \not= 0$
+```{r}
+beta2hat<-coef[3,1]
+sebeta2hat<-coef[3,2]
+t2 <-beta2hat/sebeta2hat
+print(t2)
+pval2<-coef[3,4]
+print(pval2)
+```
+So, T-statistic: $|T_2| = |\frac{\hat{\beta_2}}{se(\hat{\beta_2})}|$ = 1.36527 < $t(1-\alpha/2, n-1)$ = 2.364624 \
+We do not reject $H_0$ and conclude that $\beta_2$ is not significantly different from 0. \
+The p-value of the test is equal to 0.2144215, which leads to the same conclusion. 
+
+3. Test: $H_0: \beta_3 = 0$ against $H_a: \beta_3 \not= 0$
+```{r}
+beta3hat<-coef[4,1]
+sebeta3hat<-coef[4,2]
+t3 <-beta3hat/sebeta3hat
+print(t3)
+pval3<-coef[4,4]
+print(pval3)
+```
+So, T-statistic: $|T_3| = |\frac{\hat{\beta_3}}{se(\hat{\beta_3})}|$ = 3.155558 > $t(1-\alpha/2, n-1)$ = 2.364624 \
+We reject $H_0$ and conclude that $\beta_3$ is significantly different from 0. \
+The p-value of the test is equal to 0.0160273, which leads to the same conclusion. 
+
+
+Therefore, the result indicates that the variable HP should be removed from the model because it fails to reject the null hypothesis. Observing the highest p-value and weakest evidence against the null hypothesis, we can conclude the coefficient of HP is not significantly different from 0. 
+
+&nbsp;  
+
+**(c) Determine the regression model with the explanatory variable(s) identified in part (b) removed. Write down the estimated regression equation.**
+
+New Regression Model: $E(Y_i|X =x_i) = \beta_0 + \beta_1x_{i1}+ \beta_3x_{i3}$ \
+The estimated regression equation is $\hat{Y}$ = 35.180503587 + (-0.002567547) $x_1$ + (-0.001843143)$x_3$
+
+&nbsp;  
+
+**(d) Going back to the original model containing all three explanatory variables, construct a 99% confidence interval for the mean gas mileage for SUVs with Engine = 2000, HP = 250 and Weight = 4000**
+```{r}
+predict(fit, data.frame(x1=2000, x2=250, x3=4000), interval="confidence", level=.99)
+```
+Thus, the confidence interval for mean MPG with Engine=2000, HP=250 and Weight=4000 is (22.89565, 30.14447).
+
+&nbsp;  
+
+**(e) Construct a 99% prediction interval for the mileage of a particular SUV with Engine= 2000, HP = 250 and Weight = 4000.**
+```{r}
+predict(fit, data.frame(x1=2000, x2=250, x3=4000), interval="prediction", level=.99)
+```
+Thus, the prediction interval for y at $x_1$ = 2000,  $x_2$ = 250 and  $x_3$ = 4000 is (21.71312, 31.327).
+
+&nbsp;  
+
+**(f) Now, we are interested in testing whether Horsepower and Weight are significant after taking Engine size into consideration.**
+**(i) Compute the residual sum of squares(RSS) of each of the above model**  \
+1. $E(Y_i|X=x_i) = \beta_0 + \beta_1x_{i1}$
+```{r}
+fit2 <- lm(y~x1)
+sum(fit2$residuals^2)
+```
+The residual sum of squares in above model is 13.85416. 
+
+2.  $E(Y_i|X=x_i) = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2} + \beta_3x_{i3}$
+```{r}
+sum(fit$residuals^2)
+```
+The residual sum of squares in above model is 5.699038. 
+
+&nbsp;  
+
+**(ii) Compute the F test statistic for comparing these two models**
+```{r}
+anova(fit2, fit)
+```
+The output shows the F test statistic for comparing these two models is 5.0084. 
+
+&nbsp;  
+
+**(iii) At the 5% level of significant, what conclusions can you draw?**
+
+Since the p-value is 0.04465 < 0.05, we cannot reject the null hypothesis ($\beta_2 = \beta_3 = 0$). It appears that the variables HP and Weight do not contribute significant information to MPG once the variable Engine have been taken into consideration. 
+
+&nbsp;  
+
+**(iv) Compare the fit of these two models on the basis of $R^2$ and of $R^2_{adjusted}$. Comment on your result. **
+```{r}
+summary(fit2)$r.squared
+summary(fit)$r.squared
+```
+$R^2$ of the reduced model is smaller than $R^2$ of the full model. However, adding irrelevant predictor variables to the regression equation often increases $R^2$. So not many meaningful conclusions can be drawn here when comparing the two models.
+
+
+```{r}
+summary(fit2)$adj.r.squared
+summary(fit)$adj.r.squared
+```
+About 62% of the variablility in the MPG can be explained by the reduced model, whereas approximately 80% of the variability in the MPG can be explained by the full model. The adjusted correlation of coefficient of the reduced model is smaller than the full model. This means the full model which contains all three predictors has more explanatory power of regression model. More proportions of the total sample variablity in the Y's can be explained by the full model. There is an improvement in the fit by adding this two predictors. 
+
